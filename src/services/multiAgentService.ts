@@ -60,12 +60,13 @@ export async function callAgent(
 
   try {
     const genAI = new GoogleGenAI({ apiKey });
+    const temperature = role === 'generator' ? 0.8 : role === 'critic' ? 0.3 : 0.5;
     const response = await genAI.models.generateContent({
       model: "gemini-2.0-flash",
       contents: [{ role: 'user', parts: [{ text: userPrompt }] }],
       config: {
         systemInstruction: systemPrompt,
-        temperature: 0.7,
+        temperature,
       }
     });
 
@@ -97,7 +98,7 @@ export async function runKmzhPipeline(
   // Stage 1: Generator
   onProgress({ stage: 'generating', message: 'Агент 1: ҚМЖ мазмұны жасалуда...' });
   
-  const generatorSystemPrompt = "Сен Қазақстанның ресми білім стандарттарына сәйкес ҚМЖ жасайтын AI агентсің. Берілген параметрлер бойынша толық ҚМЖ мазмұнын жаса.";
+  const generatorSystemPrompt = "Сен Қазақстан Республикасының ресми білім стандарттарына сәйкес ҚМЖ жасайтын кәсіби AI агентсің. Берілген параметрлер бойынша толық, детальды ҚМЖ мазмұнын JSON форматында жаса. Мына JSON құрылымын қатаң сақта: metadata (ministry, school, subject, section, teacher, date, grade, participants, absent, topic, learningObjective, lessonObjective, value, quote өрістерімен), assessmentCriteria (массив), languageObjectives (vocabulary массиві мен phrases массиві бар объект), crossCurricularLinks (мәтін), previousLearning (мәтін), stages (массив, әрқайсысында period, teacherAction, studentAction, assessment, resources өрістері бар), descriptorsTable (массив, әрқайсысында taskName, descriptor, points өрістері бар), differentiation (мәтін), assessmentCheck (мәтін), healthAndSafety (мәтін), reflection (мәтін). Барлық мәтін қазақ тілінде болу керек. Тек JSON қайтар, басқа ештеңе жазба.";
   const generatorUserPrompt = `
     Пән: ${params.subject}
     Сынып: ${params.grade}
@@ -130,7 +131,7 @@ export async function runKmzhPipeline(
   if (v2) {
     onProgress({ stage: 'critiquing', message: 'Агент 2: Мазмұн тексерілуде...' });
     
-    const criticSystemPrompt = "Сен білім беру сарапшысысың. Берілген ҚМЖ мазмұнын тексер. Қателерді, олқылықтарды, бағдарламаға сәйкессіздіктерді тап. Нақты жақсарту ұсыныстарын бер.";
+    const criticSystemPrompt = "Сен Қазақстандық білім беру сарапшысысың. Берілген ҚМЖ JSON мазмұнын мына критерийлер бойынша тексер: 1) Барлық stages-та teacherAction, studentAction, assessment, resources толтырылған ба? 2) assessmentCriteria мен descriptorsTable бар және толық па? 3) Оқу мақсаттары (learningObjective) сабақ мазмұнына сәйкес пе? 4) Сабақ кезеңдерінің логикасы дұрыс па (кіріспе → негізгі → қорытынды)? 5) Тіл қазақша ма? Табылған қателерді мен жақсарту ұсыныстарын нақты тізімдеп жаз. Егер бәрі дұрыс болса ‘Мазмұн сапалы, жақсарту қажет емес’ деп жаз.";
     const criticUserPrompt = `
       Параметрлер: ${JSON.stringify(params)}
       Жасалған мазмұн: ${currentContent}
@@ -144,7 +145,7 @@ export async function runKmzhPipeline(
     if (v3) {
       onProgress({ stage: 'refining', message: 'Агент 3: Финалды нұсқа дайындалуда...' });
       
-      const refinerSystemPrompt = "Сен ҚМЖ редакторысың. Агент 1 жасаған мазмұнды Агент 2 сынына сүйеніп жетілдір. Финалды нұсқа толық, сапалы, ресми форматта болу керек. JSON форматында қайтар.";
+      const refinerSystemPrompt = "Сен ҚМЖ редакторысың. Агент 1 жасаған JSON мазмұнды Агент 2-нің сынына сүйеніп жетілдір. Ереже: 1) Агент 2 тапқан барлық қателерді түзет. 2) JSON құрылымын сақта, өзгертпе. 3) Тек JSON қайтар, басқа ештеңе жазба. 4) Егер Агент 2 ‘жақсарту қажет емес’ десе — Агент 1 нәтижесін өзгеріссіз қайтар.";
       const refinerUserPrompt = `
         Бастапқы мазмұн: ${currentContent}
         Сын және ұсыныстар: ${criticResult.success ? criticResult.content : 'Сын жоқ.'}

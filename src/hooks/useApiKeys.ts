@@ -13,15 +13,19 @@ export function useApiKeys(
   const [isApiModalOpen, setIsApiModalOpen] = useState(false);
   const [isClaudeModalOpen, setIsClaudeModalOpen] = useState(false);
   const [apiKeyInput, setApiKeyInput] = useState('');
+  const [apiKeyInput2, setApiKeyInput2] = useState('');
+  const [apiKeyInput3, setApiKeyInput3] = useState('');
   const [claudeKeyInput, setClaudeKeyInput] = useState('');
   const [isSavingApi, setIsSavingApi] = useState(false);
   const [isSavingClaude, setIsSavingClaude] = useState(false);
 
   const saveApiKey = useCallback(async () => {
-    if (!user || !apiKeyInput.trim()) return;
+    if (!user || (!apiKeyInput.trim() && !apiKeyInput2.trim() && !apiKeyInput3.trim())) return;
     setIsSavingApi(true);
     try {
-      const key = apiKeyInput.trim();
+      const key1 = apiKeyInput.trim();
+      const key2 = apiKeyInput2.trim();
+      const key3 = apiKeyInput3.trim();
       const userRef = doc(db, 'users', user.uid);
       
       await setDoc(userRef, {
@@ -29,25 +33,23 @@ export function useApiKeys(
         email: user.email,
         displayName: user.displayName || user.email?.split('@')[0] || 'User',
         photoURL: user.photoURL || '',
-        gemini_api_key: key,
+        gemini_api_key: key1,
+        gemini_api_key_2: key2,
+        gemini_api_key_3: key3,
         updatedAt: serverTimestamp(),
-        // Only set createdAt if it doesn't exist (handled by merge and rules)
-        // Actually, rules require createdAt for create.
-        // We can't easily know if it exists without getDoc, but we can try to send it.
-        // If it exists, merge will keep the old one if we don't overwrite it? 
-        // No, setDoc with merge will overwrite if we provide it.
       }, { merge: true });
       
-      // To be safe with the 'createdAt' requirement in rules for 'create'
-      // we might need a more complex approach, but let's try to ensure 
-      // useAuth always creates it first.
+      if (key1) localStorage.setItem('GEMINI_API_KEY', key1);
+      if (key2) localStorage.setItem('gemini_api_key_2', key2);
+      if (key3) localStorage.setItem('gemini_api_key_3', key3);
       
-      localStorage.setItem('GEMINI_API_KEY', key);
       setIsApiOk(true);
       
-      showToast('Gemini API кілті сақталды! ✅');
+      showToast('Gemini API кілттері сақталды! ✅');
       setIsApiModalOpen(false);
       setApiKeyInput('');
+      setApiKeyInput2('');
+      setApiKeyInput3('');
     } catch (error) {
       console.error('Error saving API key:', error);
       handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
@@ -55,7 +57,7 @@ export function useApiKeys(
     } finally {
       setIsSavingApi(false);
     }
-  }, [user, apiKeyInput, showToast, setIsApiOk]);
+  }, [user, apiKeyInput, apiKeyInput2, apiKeyInput3, showToast, setIsApiOk]);
 
   const saveClaudeKey = useCallback(async () => {
     if (!user || !claudeKeyInput.trim()) return;
@@ -98,13 +100,17 @@ export function useApiKeys(
         displayName: user.displayName || user.email?.split('@')[0] || 'User',
         photoURL: user.photoURL || '',
         gemini_api_key: null,
+        gemini_api_key_2: null,
+        gemini_api_key_3: null,
         updatedAt: serverTimestamp()
       }, { merge: true });
       
       localStorage.removeItem('GEMINI_API_KEY');
+      localStorage.removeItem('gemini_api_key_2');
+      localStorage.removeItem('gemini_api_key_3');
       setIsApiOk(false);
       
-      showToast('API кілті өшірілді 🗑️');
+      showToast('API кілттері өшірілді 🗑️');
     } catch (err) {
       console.error("Error clearing API key:", err);
       handleFirestoreError(err, OperationType.UPDATE, `users/${user.uid}`);
@@ -119,6 +125,10 @@ export function useApiKeys(
     setIsClaudeModalOpen,
     apiKeyInput,
     setApiKeyInput,
+    apiKeyInput2,
+    setApiKeyInput2,
+    apiKeyInput3,
+    setApiKeyInput3,
     claudeKeyInput,
     setClaudeKeyInput,
     isSavingApi,
@@ -130,6 +140,8 @@ export function useApiKeys(
     isApiModalOpen,
     isClaudeModalOpen,
     apiKeyInput,
+    apiKeyInput2,
+    apiKeyInput3,
     claudeKeyInput,
     isSavingApi,
     isSavingClaude,

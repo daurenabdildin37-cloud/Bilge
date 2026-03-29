@@ -77,6 +77,8 @@ export default function App() {
     isApiModalOpen, setIsApiModalOpen,
     isClaudeModalOpen, setIsClaudeModalOpen,
     apiKeyInput, setApiKeyInput,
+    apiKeyInput2, setApiKeyInput2,
+    apiKeyInput3, setApiKeyInput3,
     claudeKeyInput, setClaudeKeyInput,
     isSavingApi, isSavingClaude,
     saveApiKey, saveClaudeKey, 
@@ -520,6 +522,10 @@ export default function App() {
                     setLanguage={handleLanguageChange}
                     apiKeyInput={apiKeyInput}
                     setApiKeyInput={setApiKeyInput}
+                    apiKeyInput2={apiKeyInput2}
+                    setApiKeyInput2={setApiKeyInput2}
+                    apiKeyInput3={apiKeyInput3}
+                    setApiKeyInput3={setApiKeyInput3}
                     saveApiKey={saveApiKey}
                     isSavingApi={isSavingApi}
                     isApiOk={isApiOk}
@@ -598,15 +604,38 @@ export default function App() {
                 Бұл сіздің лимиттеріңізді басқаруға және қауіпсіздікті қамтамасыз етуге мүмкіндік береді.
                 Кілтті <a href="https://aistudio.google.com/app/apikey" target="_blank" className="text-blue-600 underline font-bold">Google AI Studio</a> сайтынан тегін алуға болады.
               </p>
-              <div className="fg mb-6">
-                <label className="flabel">API Кілті</label>
-                <input 
-                  type="password" 
-                  className="inp" 
-                  placeholder="AIza..." 
-                  value={apiKeyInput}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                />
+              
+              <div className="space-y-4 mb-6">
+                <div className="fg">
+                  <label className="flabel">API Кілті 1 (Generator)</label>
+                  <input 
+                    type="password" 
+                    className="inp" 
+                    placeholder="AIza..." 
+                    value={apiKeyInput}
+                    onChange={(e) => setApiKeyInput(e.target.value)}
+                  />
+                </div>
+                <div className="fg">
+                  <label className="flabel">API Кілті 2 (Critic)</label>
+                  <input 
+                    type="password" 
+                    className="inp" 
+                    placeholder="AIza..." 
+                    value={apiKeyInput2}
+                    onChange={(e) => setApiKeyInput2(e.target.value)}
+                  />
+                </div>
+                <div className="fg">
+                  <label className="flabel">API Кілті 3 (Refiner)</label>
+                  <input 
+                    type="password" 
+                    className="inp" 
+                    placeholder="AIza..." 
+                    value={apiKeyInput3}
+                    onChange={(e) => setApiKeyInput3(e.target.value)}
+                  />
+                </div>
               </div>
 
               <button 
@@ -614,7 +643,7 @@ export default function App() {
                 onClick={saveApiKey}
                 disabled={isSavingApi}
               >
-                {isSavingApi ? 'Сақталуда...' : 'Сақтау'}
+                {isSavingApi ? 'Сақталуда...' : 'Барлығын сақтау'}
               </button>
             </div>
           </div>

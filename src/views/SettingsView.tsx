@@ -9,6 +9,10 @@ interface SettingsViewProps {
   setLanguage: (lang: Language) => void;
   apiKeyInput: string;
   setApiKeyInput: (val: string) => void;
+  apiKeyInput2: string;
+  setApiKeyInput2: (val: string) => void;
+  apiKeyInput3: string;
+  setApiKeyInput3: (val: string) => void;
   saveApiKey: () => void;
   isSavingApi: boolean;
   isApiOk: boolean;
@@ -22,6 +26,10 @@ const SettingsView = ({
   setLanguage,
   apiKeyInput,
   setApiKeyInput,
+  apiKeyInput2,
+  setApiKeyInput2,
+  apiKeyInput3,
+  setApiKeyInput3,
   saveApiKey,
   isSavingApi,
   isApiOk,
@@ -87,9 +95,12 @@ const SettingsView = ({
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl text-sm leading-relaxed">
               <p className="mb-2">{t.apiHelp}</p>
+              <p className="text-slate-500 mb-2">
+                Біздің жүйе мульти-агенттік технологияны қолданады. Жұмыс жылдамдығы мен лимиттерді арттыру үшін 3 түрлі кілт енгізуге болады.
+              </p>
               {!isApiOk && (
                 <p className="text-emerald-600 dark:text-emerald-400 font-bold mb-2">
                   ✨ Қазіргі уақытта серверлік AI қолжетімді. Өз кілтіңізді қосу жылдамдықты арттырады.
@@ -105,28 +116,54 @@ const SettingsView = ({
               </a>
             </div>
 
-            <div className="fg">
-              <label className="flabel">{t.apiKey}</label>
-              <div className="flex gap-2">
+            <div className="space-y-4">
+              <div className="fg">
+                <label className="flabel">Gemini API Key 1 (Generator)</label>
                 <input 
                   type="password" 
-                  className="inp flex-1" 
+                  className="inp w-full" 
                   placeholder={t.apiPlaceholder}
                   value={apiKeyInput}
                   onChange={(e) => setApiKeyInput(e.target.value)}
                 />
+              </div>
+
+              <div className="fg">
+                <label className="flabel">Gemini API Key 2 (Critic)</label>
+                <input 
+                  type="password" 
+                  className="inp w-full" 
+                  placeholder="Екінші кілтті енгізіңіз (міндетті емес)"
+                  value={apiKeyInput2}
+                  onChange={(e) => setApiKeyInput2(e.target.value)}
+                />
+              </div>
+
+              <div className="fg">
+                <label className="flabel">Gemini API Key 3 (Refiner)</label>
+                <input 
+                  type="password" 
+                  className="inp w-full" 
+                  placeholder="Үшінші кілтті енгізіңіз (міндетті емес)"
+                  value={apiKeyInput3}
+                  onChange={(e) => setApiKeyInput3(e.target.value)}
+                />
+              </div>
+
+              <div className="flex justify-end">
                 <button 
-                  className={`btn btn-primary px-8 ${isSavingApi ? 'opacity-50' : ''}`}
+                  className={`btn btn-primary px-12 py-3 ${isSavingApi ? 'opacity-50' : ''}`}
                   onClick={saveApiKey}
                   disabled={isSavingApi}
                 >
-                  {isSavingApi ? t.saving : t.save}
+                  {isSavingApi ? t.saving : 'Барлық кілттерді сақтау'}
                 </button>
               </div>
+
               {isApiOk && (
                 <div className="mt-2 flex items-center gap-1 text-xs text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 size={12} />
-                  Кілт белсенді және сақталған
+                  Кілттер белсенді және сақталған
                 </div>
               )}
             </div>

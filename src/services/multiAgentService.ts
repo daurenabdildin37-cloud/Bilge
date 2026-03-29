@@ -50,18 +50,18 @@ export function getAgentKey(role: AgentRole): string {
   let key = '';
   switch (role) {
     case 'generator':
-      key = import.meta.env.VITE_GEMINI_KEY_1 || '';
+      key = import.meta.env.VITE_GEMINI_KEY_1 || localStorage.getItem('gemini_api_key_1') || '';
       break;
     case 'critic':
-      key = import.meta.env.VITE_GEMINI_KEY_2 || '';
+      key = import.meta.env.VITE_GEMINI_KEY_2 || localStorage.getItem('gemini_api_key_2') || '';
       break;
     case 'refiner':
-      key = import.meta.env.VITE_GEMINI_KEY_3 || '';
+      key = import.meta.env.VITE_GEMINI_KEY_3 || localStorage.getItem('gemini_api_key_3') || '';
       break;
   }
 
   if (!key) {
-    key = localStorage.getItem('gemini_api_key') || '';
+    key = localStorage.getItem('GEMINI_API_KEY') || localStorage.getItem('gemini_api_key') || '';
   }
   
   return key;

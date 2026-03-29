@@ -6,6 +6,7 @@ import { ArrowRight, Key, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { chatWithTeacher } from '../services/geminiService';
 import { useChat } from '../hooks/useChat';
+import { useGeneration } from '../contexts/GenerationContext';
 import { detectIntent, executeIntent } from '../services/agenticService';
 
 interface ChatViewProps {
@@ -17,6 +18,7 @@ interface ChatViewProps {
 
 const ChatView = ({ isApiOk, onOpenApiModal, addNotification, onNavigate }: ChatViewProps) => {
   const { messages, sendMessage, clearHistory, loading } = useChat();
+  const { handleKmzhGenerate, handleAssessmentGenerate, handleGameGenerate } = useGeneration();
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [useKB, setUseKB] = useState(true);
@@ -42,7 +44,48 @@ const ChatView = ({ isApiOk, onOpenApiModal, addNotification, onNavigate }: Chat
       // Detect intent in background
       detectIntent(userText).then(intent => {
         if (intent.type !== 'general_chat' && intent.confidence > 0.7) {
-          executeIntent(intent, addNotification, onNavigate);
+          executeIntent(intent, addNotification, onNavigate, (type, params) => {
+            if (type === 'kmzh') {
+              const fullParams = {
+                subject: params.subject || 'Жалпы',
+                grade: params.grade || '5',
+                topic: params.topic || '',
+                learningObjectives: params.learningObjectives || '',
+                section: params.section || '',
+                teacherName: params.teacherName || '',
+                schoolName: params.schoolName || '',
+                date: params.date || new Date().toISOString().split('T')[0],
+                value: params.value || 'Білім және ғылым',
+                quote: params.quote || 'Білім - таусылмас қазына',
+                participants: params.participants || '25',
+                absent: params.absent || '0',
+                additionalRequests: params.additionalRequests || '',
+                sourceText: params.sourceText || ''
+              };
+              handleKmzhGenerate(fullParams, true, isApiOk, onOpenApiModal, addNotification);
+            } else if (type === 'assessment') {
+              const fullParams = {
+                subject: params.subject || 'Жалпы',
+                grade: params.grade || '5',
+                topic: params.topic || '',
+                type: params.type || 'БЖБ',
+                taskCount: params.taskCount || 5,
+                difficulty: params.difficulty || 'Орташа',
+                sourceText: params.sourceText || ''
+              };
+              handleAssessmentGenerate(fullParams, true, isApiOk, onOpenApiModal, addNotification);
+            } else if (type === 'game') {
+              const fullParams = {
+                topic: params.topic || '',
+                grade: params.grade || '5',
+                type: params.type || 'Kahoot',
+                count: params.count || 5,
+                lang: 'Қазақша',
+                useKB: true
+              };
+              handleGameGenerate(fullParams, true, isApiOk, onOpenApiModal, addNotification);
+            }
+          });
           if (intent.message) {
             sendMessage(intent.message, 'ai');
           }

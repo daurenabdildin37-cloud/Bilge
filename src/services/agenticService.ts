@@ -51,20 +51,36 @@ export async function detectIntent(userMessage: string): Promise<AgenticIntent> 
 export async function executeIntent(
   intent: AgenticIntent, 
   addNotification: (title: string, message: string, type: string) => void, 
-  navigate: (tab: string) => void
+  navigate: (tab: string) => void,
+  onDirectGenerate?: (type: string, params: any) => void
 ): Promise<void> {
   switch (intent.type) {
     case 'create_kmzh':
-      navigate('kmzh');
-      addNotification('ҚМЖ бетіне өттіңіз', 'Параметрлерді толтырыңыз немесе AI-дан сұраңыз.', 'info');
+      if (onDirectGenerate && (intent.params.topic || intent.params.subject)) {
+        onDirectGenerate('kmzh', intent.params);
+        addNotification('ҚМЖ жасалуда... 🤖', 'AI сіздің сұранысыңыз бойынша сабақ жоспарын дайындап жатыр.', 'success');
+      } else {
+        navigate('kmzh');
+        addNotification('ҚМЖ бетіне өттіңіз', 'Параметрлерді толтырыңыз немесе AI-дан сұраңыз.', 'info');
+      }
       break;
     case 'create_assessment':
-      navigate('assessment');
-      addNotification('Бағалау бетіне өттіңіз', 'Тапсырмалар жасау үшін параметрлерді енгізіңіз.', 'info');
+      if (onDirectGenerate && (intent.params.topic || intent.params.subject)) {
+        onDirectGenerate('assessment', intent.params);
+        addNotification('Бағалау жасалуда... 🤖', 'AI тапсырмалар мен критерийлерді дайындап жатыр.', 'success');
+      } else {
+        navigate('assessment');
+        addNotification('Бағалау бетіне өттіңіз', 'Тапсырмалар жасау үшін параметрлерді енгізіңіз.', 'info');
+      }
       break;
     case 'create_game':
-      navigate('games');
-      addNotification('Ойындар бетіне өттіңіз', 'Ойын түрін таңдап, тақырыпты жазыңыз.', 'info');
+      if (onDirectGenerate && (intent.params.topic || intent.params.subject)) {
+        onDirectGenerate('game', intent.params);
+        addNotification('Ойын жасалуда... 🤖', 'AI қызықты ойын сценарийін дайындап жатыр.', 'success');
+      } else {
+        navigate('games');
+        addNotification('Ойындар бетіне өттіңіз', 'Ойын түрін таңдап, тақырыпты жазыңыз.', 'info');
+      }
       break;
     case 'general_chat':
     default:

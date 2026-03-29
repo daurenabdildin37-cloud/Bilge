@@ -377,29 +377,54 @@ const KMZHView = ({
           <h3 className="ai-loader-title">
             {generationProgress?.message || 'ҚМЖ дайындалуда...'}
           </h3>
-          <p className="ai-loader-sub">
-            {generationProgress?.status === 'generating_images' 
-              ? 'Сабақ кезеңдеріне сәйкес көрнекі суреттер дайындалуда. Бұл біраз уақыт алуы мүмкін.' 
-              : 'AI мұғалім ресми форматта жоспар құруда. Бұл шамамен 15-30 секунд алуы мүмкін.'}
-          </p>
           
-          {generationProgress?.total ? (
-            <div className="w-full max-w-xs bg-slate-100 rounded-full h-2 mt-6 overflow-hidden mx-auto">
-              <motion.div 
-                className="bg-indigo-600 h-full"
-                initial={{ width: 0 }}
-                animate={{ width: `${(generationProgress.current! / generationProgress.total!) * 100}%` }}
-              />
+          {import.meta.env.VITE_GEMINI_KEY_2 ? (
+            <div className="mt-8 w-full max-w-md mx-auto space-y-4">
+              <div className="flex flex-col gap-3">
+                {[
+                  { id: 0, name: "🤖 Агент 1 — Жасаушы", desc: "Сабақ жоспарының негізін құрастыруда..." },
+                  { id: 1, name: "🔍 Агент 2 — Сыншы", desc: "Мазмұнды тексеріп, түзетулер ұсынуда..." },
+                  { id: 2, name: "✨ Агент 3 — Жетілдіруші", desc: "Жоспарды соңғы нұсқаға дейін өңдеуде..." }
+                ].map((agent, i) => (
+                  <div key={i} className={`flex items-start gap-3 p-3 rounded-xl transition-all duration-500 ${loaderStep === agent.id ? 'bg-indigo-50 border border-indigo-100 shadow-sm scale-[1.02]' : i < loaderStep ? 'opacity-60' : 'opacity-40'}`}>
+                    <div className={`mt-1 flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center ${i < loaderStep ? 'bg-green-500 text-white' : i === loaderStep ? 'bg-indigo-600 text-white animate-pulse' : 'bg-slate-200 text-slate-400'}`}>
+                      {i < loaderStep ? <CheckCircle2 size={12} /> : i === loaderStep ? <Clock size={12} className="animate-spin" /> : <div className="w-1.5 h-1.5 rounded-full bg-current" />}
+                    </div>
+                    <div className="text-left">
+                      <div className={`text-sm font-bold ${i === loaderStep ? 'text-indigo-900' : 'text-slate-700'}`}>{agent.name}</div>
+                      {i === loaderStep && <div className="text-[11px] text-indigo-600 mt-0.5 animate-pulse">{generationProgress?.message || agent.desc}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           ) : (
-            <div className="ai-steps">
-              {steps.map((step, i) => (
-                <div key={i} className={`ai-step ${i < loaderStep ? 'done' : i === loaderStep ? 'cur' : 'wait'}`}>
-                  {i < loaderStep ? <CheckCircle2 size={14} /> : i === loaderStep ? <Clock size={14} className="animate-spin" /> : <div className="w-[14px]" />}
-                  {step}
+            <>
+              <p className="ai-loader-sub">
+                {generationProgress?.status === 'generating_images' 
+                  ? 'Сабақ кезеңдеріне сәйкес көрнекі суреттер дайындалуда. Бұл біраз уақыт алуы мүмкін.' 
+                  : 'AI мұғалім ресми форматта жоспар құруда. Бұл шамамен 15-30 секунд алуы мүмкін.'}
+              </p>
+              
+              {generationProgress?.total ? (
+                <div className="w-full max-w-xs bg-slate-100 rounded-full h-2 mt-6 overflow-hidden mx-auto">
+                  <motion.div 
+                    className="bg-indigo-600 h-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${(generationProgress.current! / generationProgress.total!) * 100}%` }}
+                  />
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="ai-steps">
+                  {steps.map((step, i) => (
+                    <div key={i} className={`ai-step ${i < loaderStep ? 'done' : i === loaderStep ? 'cur' : 'wait'}`}>
+                      {i < loaderStep ? <CheckCircle2 size={14} /> : i === loaderStep ? <Clock size={14} className="animate-spin" /> : <div className="w-[14px]" />}
+                      {step}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}

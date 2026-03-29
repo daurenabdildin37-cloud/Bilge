@@ -28,3 +28,14 @@ export const getBaseUrl = () => {
   
   return fullUrl;
 };
+
+export const safeJsonParse = (str: string, fallback: any = null) => {
+  try {
+    // Remove markdown code blocks if present
+    const cleanStr = str.replace(/```json\n?|```/g, '').trim();
+    return JSON.parse(cleanStr);
+  } catch (e) {
+    console.error("JSON Parse Error:", e, "String:", str);
+    return fallback;
+  }
+};

@@ -2,6 +2,8 @@
 import React, { createContext, useContext, useState, useRef, useEffect } from 'react';
 import { generateGameIterative, generateKmzh, generateAssessment, generateGame } from '../services/geminiService';
 import { generateGameWithClaude } from '../services/claudeService';
+import { runKmzhPipeline, PipelineProgress } from '../services/multiAgentService';
+import { safeJsonParse } from '../lib/utils';
 
 interface Message {
   role: 'user' | 'model';
@@ -220,19 +222,49 @@ export const GenerationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         kbContext = await getContextForGenerator('lesson_plan', params);
       }
       
-      setKmzhLoaderStep(2);
       const enhancedParams = { 
         ...params, 
         sourceText: (params.sourceText || "") + (kbContext ? "\n\n--- БІЛІМ БАЗАСЫНАН КОНТЕКСТ ---\n" + kbContext : "") 
       };
-      
-      const data = await generateKmzh(enhancedParams, (progress) => {
-        setKmzhProgress(progress);
-      });
-      setKmzhLoaderStep(3);
-      setKmzhResult(data);
-      setKmzhLoaderStep(4);
-      addNotification('ҚМЖ Дайын! ✅', `${params.topic} тақырыбы бойынша сабақ жоспары сәтті жасалды.`, 'success');
+
+      const hasMultiAgentKeys = 
+        import.meta.env.VITE_GEMINI_KEY_1 || 
+        import.meta.env.VITE_GEMINI_KEY_2 || 
+        import.meta.env.VITE_GEMINI_KEY_3;
+
+      if (hasMultiAgentKeys) {
+        const result = await runKmzhPipeline(enhancedParams, (progress: PipelineProgress) => {
+          setKmzhProgress({ status: progress.stage, message: progress.message });
+          
+          if (progress.stage === 'generating') setKmzhLoaderStep(0);
+          else if (progress.stage === 'critiquing') setKmzhLoaderStep(1);
+          else if (progress.stage === 'refining') setKmzhLoaderStep(2);
+          else if (progress.stage === 'done') setKmzhLoaderStep(3);
+        });
+
+        if (result.success) {
+          const data = safeJsonParse(result.finalContent, null);
+          if (data) {
+            setKmzhResult(data);
+            setKmzhLoaderStep(4);
+            addNotification('ҚМЖ Дайын! ✅', `${params.topic} тақырыбы бойынша сабақ жоспары сәтті жасалды.`, 'success');
+          } else {
+            addNotification('Қате ❌', 'Генерацияланған мазмұнды оқу мүмкін болмады (JSON parse error).', 'error');
+            console.error("JSON Parse Error in Multi-Agent Pipeline:", result.finalContent);
+          }
+        } else {
+          addNotification('Генерация қатесі ❌', 'Multi-Agent Pipeline сәтсіз аяқталды.', 'error');
+        }
+      } else {
+        setKmzhLoaderStep(2);
+        const data = await generateKmzh(enhancedParams, (progress) => {
+          setKmzhProgress(progress);
+        });
+        setKmzhLoaderStep(3);
+        setKmzhResult(data);
+        setKmzhLoaderStep(4);
+        addNotification('ҚМЖ Дайын! ✅', `${params.topic} тақырыбы бойынша сабақ жоспары сәтті жасалды.`, 'success');
+      }
     } catch (err: any) {
       console.error("KMZH Generation Error:", err);
       addNotification('Генерация қатесі ❌', err.message || 'Қате орын алды.', 'error');

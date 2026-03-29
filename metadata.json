@@ -1,0 +1,9 @@
+{
+  "name": "Remix: Bilge AI Platform",
+  "description": "Қазақстан мұғалімдеріне арналған AI платформасы. ҚМЖ, БЖБ, ТЖБ және білім базасы негізінде сапалы материалдарды генерациялайды.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

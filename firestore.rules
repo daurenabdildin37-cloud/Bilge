@@ -1,0 +1,191 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function isValidString(val, min, max) {
+      return val is string && val.size() >= min && val.size() <= max;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (request.auth.token.email.lower() == "nurghaliieva1977@mail.ru" || 
+         request.auth.token.email.lower() == "abdildindauren95@gmail.com" || 
+         request.auth.token.email.lower() == "abdildindauren4@gmail.com" || 
+         request.auth.token.email.lower() == "daurenabdildin464@gmail.com" ||
+         request.auth.token.email.lower() == "daurenabdildin37@gmail.com")
+      );
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.size() > 5 && email.size() < 255;
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && 
+                      hasRequiredFields(['email', 'displayName', 'uid', 'createdAt']) &&
+                      hasOnlyAllowedFields(['email', 'displayName', 'uid', 'createdAt', 'photoURL', 'role', 'updatedAt', 'gemini_api_key', 'claude_api_key', 'image_gen_api_key']) &&
+                      isValidEmail(request.resource.data.email) &&
+                      isValidString(request.resource.data.displayName, 2, 100) &&
+                      request.resource.data.uid == request.auth.uid;
+      allow update: if isOwner(userId) && 
+                      hasOnlyAllowedFields(['email', 'displayName', 'uid', 'createdAt', 'photoURL', 'role', 'updatedAt', 'gemini_api_key', 'claude_api_key', 'image_gen_api_key']) &&
+                      (request.resource.data.email == resource.data.email) &&
+                      (request.resource.data.uid == resource.data.uid) &&
+                      (request.resource.data.createdAt == resource.data.createdAt) &&
+                      isValidString(request.resource.data.displayName, 2, 100);
+    }
+
+    function isValidAssessmentResult(data) {
+      return data.assessmentId is string &&
+             data.studentName is string && data.studentName.size() > 0 &&
+             data.answers is list &&
+             data.totalScore is number &&
+             data.maxScore is number;
+    }
+
+    function isValidPin(data) {
+      return data.userId == request.auth.uid &&
+             data.lat is number &&
+             data.lng is number &&
+             data.title is string && data.title.size() > 0;
+    }
+
+    match /assessment_results/{resultId} {
+      allow read: if true;
+      allow create: if isValidAssessmentResult(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /pins/{pinId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidPin(request.resource.data);
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidPin(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    function isValidNotification(data) {
+      return data.userId == request.auth.uid &&
+             data.title is string && data.title.size() > 0 &&
+             data.message is string && data.message.size() > 0;
+    }
+
+    function isValidLibraryItem(data) {
+      return data.userId == request.auth.uid &&
+             data.type in ["ҚМЖ", "Ойын", "БЖБ", "ТЖБ", "БЖБ/ТЖБ", "Бағалау"] &&
+             data.title is string && data.title.size() > 0;
+    }
+
+    function isValidLeaderboardEntry(data) {
+      return data.userId == request.auth.uid &&
+             data.name is string && data.name.size() > 0 &&
+             data.score is number;
+    }
+
+    function isValidFeedback(data) {
+      return data.category in ["Bug Report", "Suggestion", "General Feedback"] &&
+             data.message is string && data.message.size() > 0;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidNotification(request.resource.data);
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && 
+                      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /library/{itemId} {
+      allow read: if (isAuthenticated() && resource.data.userId == request.auth.uid) || 
+                     (resource.data.data.metadata.mode == 'online');
+      allow create: if isAuthenticated() && isValidLibraryItem(request.resource.data);
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidLibraryItem(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /leaderboard/{entryId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidLeaderboardEntry(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /knowledge_base/{chunkId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /feedback/{feedbackId} {
+      allow read: if isAdmin();
+      allow create: if isAuthenticated() && isValidFeedback(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    function isValidChatMessage(data) {
+      return data.userId == request.auth.uid &&
+             data.role in ['user', 'ai'] &&
+             data.text is string && data.text.size() > 0 && data.text.size() < 10000;
+    }
+
+    function isValidCalendarCycle(data) {
+      return data.userId == request.auth.uid &&
+             data.startDate is string &&
+             data.days is list;
+    }
+
+    function isValidCalendarTopic(data) {
+      return data.userId == request.auth.uid &&
+             data.date is string &&
+             data.lessonId is string &&
+             data.topic is string && data.topic.size() < 5000;
+    }
+
+    match /chats/{messageId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidChatMessage(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /calendar_cycles/{cycleId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidCalendarCycle(request.resource.data);
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidCalendarCycle(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /calendar_topics/{topicId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && isValidCalendarTopic(request.resource.data);
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && isValidCalendarTopic(request.resource.data);
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /settings/{settingId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /system_errors/{errorId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

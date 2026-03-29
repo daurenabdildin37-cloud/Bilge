@@ -1,0 +1,211 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and settings",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "gemini_api_key": { "type": "string" },
+        "claude_api_key": { "type": "string" },
+        "image_gen_api_key": { "type": "string" },
+        "school": { "type": "string" },
+        "role": { "type": "string", "enum": ["admin", "teacher", "student"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "displayName", "createdAt"]
+    },
+    "Pin": {
+      "title": "Pin",
+      "description": "Map pins saved by user",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "lat": { "type": "number" },
+        "lng": { "type": "number" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "emoji": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "lat", "lng", "title"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notifications",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string", "enum": ["info", "success", "warning", "error"] },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "message"]
+    },
+    "LibraryItem": {
+      "title": "LibraryItem",
+      "description": "Saved lesson plans, assessments, etc.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["ҚМЖ", "Ойын", "БЖБ", "ТЖБ", "БЖБ/ТЖБ", "Бағалау"] },
+        "title": { "type": "string" },
+        "subject": { "type": "string" },
+        "grade": { "type": "string" },
+        "data": { "type": "object" },
+        "date": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "title"]
+    },
+    "LeaderboardEntry": {
+      "title": "LeaderboardEntry",
+      "description": "User game scores for the leaderboard",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "score": { "type": "number" },
+        "rank": { "type": "number" },
+        "date": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "score"]
+    },
+    "AssessmentResult": {
+      "title": "AssessmentResult",
+      "description": "Results of student assessments",
+      "type": "object",
+      "properties": {
+        "assessmentId": { "type": "string" },
+        "studentName": { "type": "string" },
+        "answers": { "type": "array" },
+        "totalScore": { "type": "number" },
+        "maxScore": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["assessmentId", "studentName", "totalScore", "maxScore"]
+    },
+    "Feedback": {
+      "title": "Feedback",
+      "description": "User feedback and bug reports",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userEmail": { "type": "string" },
+        "category": { "type": "string", "enum": ["Bug Report", "Suggestion", "General Feedback"] },
+        "message": { "type": "string" },
+        "contactInfo": { "type": "string" },
+        "status": { "type": "string", "enum": ["new", "reviewed", "resolved"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["category", "message"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Chat messages between user and AI",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "role": { "type": "string", "enum": ["user", "ai"] },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "role", "text", "createdAt"]
+    },
+    "CalendarCycle": {
+      "title": "CalendarCycle",
+      "description": "Schedule cycles for the calendar",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "startDate": { "type": "string" },
+        "endDate": { "type": "string" },
+        "days": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "startDate", "days"]
+    },
+    "CalendarTopic": {
+      "title": "CalendarTopic",
+      "description": "Lesson topics for specific dates",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string" },
+        "lessonId": { "type": "string" },
+        "topic": { "type": "string" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "lessonId", "topic"]
+    },
+    "KnowledgeBaseMaterial": {
+      "title": "KnowledgeBaseMaterial",
+      "description": "Educational materials stored for RAG",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "subject": { "type": "string" },
+        "grade": { "type": "string" },
+        "topic": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "title", "content", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "User notifications collection"
+    },
+    "/library/{itemId}": {
+      "schema": "LibraryItem",
+      "description": "User library collection"
+    },
+    "/leaderboard/{entryId}": {
+      "schema": "LeaderboardEntry",
+      "description": "Public leaderboard entries"
+    },
+    "/assessment_results/{resultId}": {
+      "schema": "AssessmentResult",
+      "description": "Student assessment results"
+    },
+    "/feedback/{feedbackId}": {
+      "schema": "Feedback",
+      "description": "User feedback collection"
+    },
+    "/pins/{pinId}": {
+      "schema": "Pin",
+      "description": "User map pins"
+    },
+    "/chats/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "User chat history"
+    },
+    "/calendar_cycles/{cycleId}": {
+      "schema": "CalendarCycle",
+      "description": "User schedule cycles"
+    },
+    "/calendar_topics/{topicId}": {
+      "schema": "CalendarTopic",
+      "description": "User lesson topics"
+    },
+    "/knowledge_base/{materialId}": {
+      "schema": "KnowledgeBaseMaterial",
+      "description": "Knowledge base materials for RAG"
+    }
+  }
+}

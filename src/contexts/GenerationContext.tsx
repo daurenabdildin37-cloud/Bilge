@@ -253,7 +253,30 @@ export const GenerationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             console.error("JSON Parse Error in Multi-Agent Pipeline:", result.finalContent);
           }
         } else {
-          addNotification('Генерация қатесі ❌', 'Multi-Agent Pipeline сәтсіз аяқталды.', 'error');
+          // Pipeline failed, but some agents might have succeeded
+          const failedAgent = result.agentResults.find(r => !r.success);
+          
+          if (result.finalContent) {
+            // Agent 1 succeeded, but 2 or 3 failed
+            const data = safeJsonParse(result.finalContent, null);
+            if (data) {
+              setKmzhResult(data);
+              setKmzhLoaderStep(4);
+              const agentName = failedAgent?.role === 'critic' ? 'Агент 2' : 'Агент 3';
+              addNotification('Жартылай дайын ⚠️', `${agentName} сәтсіз, бірақ алдыңғы нұсқа сақталды.`, 'warning');
+            } else {
+              addNotification('Генерация қатесі ❌', 'Агент 1 нәтижесін оқу мүмкін болмады.', 'error');
+            }
+          } else {
+            // Agent 1 failed or timeout
+            let errorMsg = 'Multi-Agent Pipeline сәтсіз аяқталды.';
+            if (failedAgent && failedAgent.role === 'generator') {
+              errorMsg = 'Агент 1 қатесі: API кілтін немесе лимитті тексеріңіз.';
+            } else if (result.error) {
+              errorMsg = result.error;
+            }
+            addNotification('Генерация қатесі ❌', errorMsg, 'error');
+          }
         }
       } else {
         setKmzhLoaderStep(2);

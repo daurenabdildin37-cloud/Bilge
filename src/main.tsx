@@ -6,12 +6,15 @@ import './index.css';
 import { ErrorBoundary } from './components/Common/ErrorBoundary';
 
 import { AuthProvider } from './contexts/AuthContext';
+import { GenerationProvider } from './contexts/GenerationContext';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ErrorBoundary>
       <AuthProvider>
-        <App />
+        <GenerationProvider>
+          <App />
+        </GenerationProvider>
       </AuthProvider>
     </ErrorBoundary>
   </StrictMode>,

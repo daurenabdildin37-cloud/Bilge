@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Search, Globe, Trash2, MapPin, Edit2, Share2, X, ChevronRight } from 'lucide-react';
+import { Search, Globe, Trash2, MapPin, Edit2, Share2, X, ChevronRight, ArrowLeft } from 'lucide-react';
 import { db } from '../lib/firebase';
 import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
@@ -30,6 +30,7 @@ interface Pin {
 
 interface MapViewProps {
   addNotification?: (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
+  onNavigate?: (tab: string) => void;
 }
 
 const EMOJIS = ['📍','🔴','🟡','🟢','🔵','🏙️','🌊','⛰️','🌿','🏛️','⭐','❗','🔎','✏️','🏠','🌍'];
@@ -55,7 +56,7 @@ const FlyToLocation = ({ center, zoom }: { center: [number, number], zoom: numbe
   return null;
 };
 
-const MapView = ({ addNotification }: MapViewProps) => {
+const MapView = ({ addNotification, onNavigate }: MapViewProps) => {
   const { user } = useAuth();
   const [pins, setPins] = useState<Pin[]>([]);
   const [loading, setLoading] = useState(true);
@@ -267,7 +268,17 @@ const MapView = ({ addNotification }: MapViewProps) => {
   };
 
   return (
-    <div className="flex flex-col h-[500px] sm:h-[600px] md:h-[calc(100vh-180px)] bg-[#0f1923] text-[#e2eaf4] overflow-hidden rounded-2xl border border-white/10 relative isolate">
+    <div className="flex flex-col space-y-4">
+      {onNavigate && (
+        <button 
+          onClick={() => onNavigate('dashboard')}
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Дашбордқа оралу
+        </button>
+      )}
+      <div className="flex flex-col h-[500px] sm:h-[600px] md:h-[calc(100vh-180px)] bg-[#0f1923] text-[#e2eaf4] overflow-hidden rounded-2xl border border-white/10 relative isolate">
       {/* Top Bar */}
       <div className="flex items-center gap-2 sm:gap-4 p-3 sm:p-4 bg-[#172030] border-b border-white/10 z-20 relative">
         <div className="text-sm sm:text-lg font-bold text-[#63b3ed] tracking-wider whitespace-nowrap">
@@ -556,6 +567,7 @@ const MapView = ({ addNotification }: MapViewProps) => {
         .leaflet-popup-content { margin: 12px !important; }
       `}</style>
     </div>
+  </div>
   );
 };
 

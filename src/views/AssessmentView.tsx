@@ -1,7 +1,7 @@
 
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { FileText, CheckCircle2, Upload, Download, Save, Printer, Globe, Users, Link as LinkIcon, Eye, Key } from 'lucide-react';
+import { FileText, CheckCircle2, Upload, Download, Save, Printer, Globe, Users, Link as LinkIcon, Eye, Key, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import mammoth from 'mammoth';
 import { extractTextFromPdf } from '../lib/pdf-utils';
@@ -298,6 +298,15 @@ const AssessmentView = ({ isApiOk, onOpenApiModal, addNotification, result: prop
       animate={{ opacity: 1, y: 0 }}
       className="fu"
     >
+      {onNavigate && (
+        <button 
+          onClick={() => onNavigate('dashboard')}
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Дашбордқа оралу
+        </button>
+      )}
       <div className="flex gap-4 mb-6">
         <button 
           className={`btn flex-1 ${activeTab === 'create' ? 'btn-primary bg-purple-600' : 'btn-ghost'}`}

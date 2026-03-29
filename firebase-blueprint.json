@@ -10,6 +10,8 @@
         "email": { "type": "string" },
         "photoURL": { "type": "string" },
         "gemini_api_key": { "type": "string" },
+        "gemini_api_key_2": { "type": "string" },
+        "gemini_api_key_3": { "type": "string" },
         "claude_api_key": { "type": "string" },
         "image_gen_api_key": { "type": "string" },
         "school": { "type": "string" },

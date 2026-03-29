@@ -12,12 +12,14 @@ import { useAuth } from './hooks/useAuth';
 import { useNotifications } from './hooks/useNotifications';
 import { useTheme } from './hooks/useTheme';
 import { useApiKeys } from './hooks/useApiKeys';
-import { useKmzh } from './hooks/useKmzh';
 import { useKBBackground } from './hooks/useKBBackground';
 import { KBProgressIndicator } from './components/KnowledgeBase/KBProgressIndicator';
 import { KMZHParams, GameParams, KMZHData, GameData, AssessmentData } from './types';
 import { translations, Language } from './lib/translations';
 import DashboardView from './views/DashboardView';
+import { useGeneration } from './contexts/GenerationContext';
+import { ViewLoader } from './components/Common/ViewLoader';
+
 const KMZHView = lazy(() => import('./views/KMZHView'));
 const GamesView = lazy(() => import('./views/GamesView'));
 const ChatView = lazy(() => import('./views/ChatView'));
@@ -33,9 +35,6 @@ const SettingsView = lazy(() => import('./views/SettingsView'));
 const FeedbackView = lazy(() => import('./views/FeedbackView'));
 const GradingSimulatorView = lazy(() => import('./views/GradingSimulatorView'));
 const PublicGradingView = lazy(() => import('./views/PublicGradingView'));
-
-import { GenerationProvider } from './contexts/GenerationContext';
-import { ViewLoader } from './components/Common/ViewLoader';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState(() => {
@@ -86,11 +85,12 @@ export default function App() {
   } = useApiKeys(user, showToast, setIsApiOk, setIsClaudeApiOk);
 
   const {
-    kmzhLoading, setKmzhLoading,
-    kmzhResult, setKmzhResult,
-    assessmentResult, setAssessmentResult,
-    kmzhParams, setKmzhParams
-  } = useKmzh();
+    kmzhResult,
+    assessmentResult,
+    setKmzhResult,
+    setAssessmentResult,
+    setKmzhParams
+  } = useGeneration();
 
   const kbBackground = useKBBackground(addNotification);
 
@@ -413,9 +413,8 @@ export default function App() {
   }[activeTab] || '';
 
   return (
-    <GenerationProvider>
-      <div className="app">
-        <Toast show={toast.show} message={toast.message} />
+    <div className="app">
+      <Toast show={toast.show} message={toast.message} />
         
         <Sidebar 
           activeTab={activeTab} 
@@ -467,6 +466,7 @@ export default function App() {
                     isApiOk={isApiOk}
                     onOpenApiModal={openApiModal}
                     addNotification={addNotification}
+                    onNavigate={handleNavigate}
                   />
                 )}
                 {activeTab === 'assessment' && (
@@ -480,7 +480,7 @@ export default function App() {
                     t={t}
                   />
                 )}
-                {activeTab === 'map' && <MapView addNotification={addNotification} />}
+                {activeTab === 'map' && <MapView addNotification={addNotification} onNavigate={handleNavigate} />}
                 {activeTab === 'coding' && (
                   <CodingView 
                     isApiOk={isApiOk} 
@@ -499,7 +499,7 @@ export default function App() {
                   />
                 )}
                 {activeTab === 'calendar' && <CalendarView />}
-                {activeTab === 'library' && <LibraryView searchQuery={searchQuery} isApiOk={isApiOk} onOpenApiModal={openApiModal} addNotification={addNotification} showToast={showToast} t={t} />}
+                {activeTab === 'library' && <LibraryView searchQuery={searchQuery} isApiOk={isApiOk} onOpenApiModal={openApiModal} addNotification={addNotification} showToast={showToast} t={t} onNavigate={handleNavigate} />}
                 {activeTab === 'games' && (
                   <GamesView 
                     isApiOk={isApiOk}
@@ -694,6 +694,5 @@ export default function App() {
           onStopClick={kbBackground.stopIngestion}
         />
       </div>
-    </GenerationProvider>
   );
 }

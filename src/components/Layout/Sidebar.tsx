@@ -68,7 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       ></div>
 
       <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
-        <div className="sidebar-logo">
+        <div className="sidebar-logo cursor-pointer" onClick={() => { setActiveTab('dashboard'); setIsSidebarOpen(false); }}>
           <div className="logo-wrap">
             <div className="logo-mark">B</div>
             <div className="logo-info">

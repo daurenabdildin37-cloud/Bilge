@@ -24,11 +24,11 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && (
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-        (request.auth.token.email.lower() == "nurghaliieva1977@mail.ru" || 
-         request.auth.token.email.lower() == "abdildindauren95@gmail.com" || 
-         request.auth.token.email.lower() == "abdildindauren4@gmail.com" || 
-         request.auth.token.email.lower() == "daurenabdildin464@gmail.com" ||
-         request.auth.token.email.lower() == "daurenabdildin37@gmail.com")
+        (request.auth.token.email.lower() == "daurenabdildin37@gmail.com" && request.auth.token.email_verified == true) ||
+        (request.auth.token.email.lower() == "nurghaliieva1977@mail.ru" && request.auth.token.email_verified == true) || 
+        (request.auth.token.email.lower() == "abdildindauren95@gmail.com" && request.auth.token.email_verified == true) || 
+        (request.auth.token.email.lower() == "abdildindauren4@gmail.com" && request.auth.token.email_verified == true) || 
+        (request.auth.token.email.lower() == "daurenabdildin464@gmail.com" && request.auth.token.email_verified == true)
       );
     }
 
@@ -40,16 +40,18 @@ service cloud.firestore {
       allow read: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) && 
                       hasRequiredFields(['email', 'displayName', 'uid', 'createdAt']) &&
-                      hasOnlyAllowedFields(['email', 'displayName', 'uid', 'createdAt', 'photoURL', 'role', 'updatedAt', 'gemini_api_key', 'claude_api_key', 'image_gen_api_key']) &&
                       isValidEmail(request.resource.data.email) &&
                       isValidString(request.resource.data.displayName, 2, 100) &&
-                      request.resource.data.uid == request.auth.uid;
-      allow update: if isOwner(userId) && 
-                      hasOnlyAllowedFields(['email', 'displayName', 'uid', 'createdAt', 'photoURL', 'role', 'updatedAt', 'gemini_api_key', 'claude_api_key', 'image_gen_api_key']) &&
+                      request.resource.data.uid == request.auth.uid &&
+                      (request.resource.data.role == 'teacher' || isAdmin());
+      allow update: if isAdmin() || (
+                      isOwner(userId) && 
                       (request.resource.data.email == resource.data.email) &&
                       (request.resource.data.uid == resource.data.uid) &&
                       (request.resource.data.createdAt == resource.data.createdAt) &&
-                      isValidString(request.resource.data.displayName, 2, 100);
+                      (request.resource.data.role == resource.data.role) &&
+                      isValidString(request.resource.data.displayName, 2, 100)
+                    );
     }
 
     function isValidAssessmentResult(data) {

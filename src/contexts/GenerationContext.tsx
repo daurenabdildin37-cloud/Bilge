@@ -46,6 +46,8 @@ interface GenerationContextType {
   kmzhProgress: GenerationProgress | null;
   kmzhLoaderStep: number;
   setKmzhLoaderStep: React.Dispatch<React.SetStateAction<number>>;
+  kmzhParams: any;
+  setKmzhParams: React.Dispatch<React.SetStateAction<any>>;
   handleKmzhGenerate: (
     params: any,
     useKB: boolean,
@@ -106,6 +108,25 @@ export const GenerationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
   const [kmzhResult, setKmzhResult] = useState<any>(null);
   const [kmzhProgress, setKmzhProgress] = useState<GenerationProgress | null>(null);
   const [kmzhLoaderStep, setKmzhLoaderStep] = useState(0);
+  const [kmzhParams, setKmzhParams] = useState<any>({
+    subject: 'Математика',
+    grade: '5',
+    topic: '',
+    learningObjectives: '',
+    section: '',
+    teacherName: '',
+    schoolName: '',
+    date: new Date().toLocaleDateString(),
+    value: 'Бірлік және ынтымақ',
+    quote: 'Білім — таусылмайтын кен.',
+    participants: '25',
+    absent: '0',
+    time: '45',
+    lang: 'Қазақша',
+    bloom: ['Білу', 'Түсіну'],
+    additionalRequests: '',
+    sourceText: '',
+  });
 
   // Assessment State
   const [isAssessmentGenerating, setIsAssessmentGenerating] = useState(false);
@@ -387,7 +408,7 @@ export const GenerationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       codingProgress,
       handleCodingSend,
 
-      isKmzhGenerating, kmzhResult, setKmzhResult, kmzhProgress, kmzhLoaderStep, setKmzhLoaderStep, handleKmzhGenerate,
+      isKmzhGenerating, kmzhResult, setKmzhResult, kmzhProgress, kmzhLoaderStep, setKmzhLoaderStep, kmzhParams, setKmzhParams, handleKmzhGenerate,
       isAssessmentGenerating, assessmentResult, setAssessmentResult, assessmentProgress, handleAssessmentGenerate,
       isGameGenerating, gameResult, setGameResult, gameProgress, gameParams, setGameParams, activeGame, setActiveGame, gameLoaderStep, setGameLoaderStep, handleGameGenerate
     }}>

@@ -58,6 +58,7 @@ export async function executeIntent(
     case 'create_kmzh':
       if (onDirectGenerate && (intent.params.topic || intent.params.subject)) {
         onDirectGenerate('kmzh', intent.params);
+        navigate('kmzh');
         addNotification('ҚМЖ жасалуда... 🤖', 'AI сіздің сұранысыңыз бойынша сабақ жоспарын дайындап жатыр.', 'success');
       } else {
         navigate('kmzh');
@@ -67,6 +68,7 @@ export async function executeIntent(
     case 'create_assessment':
       if (onDirectGenerate && (intent.params.topic || intent.params.subject)) {
         onDirectGenerate('assessment', intent.params);
+        navigate('assessment');
         addNotification('Бағалау жасалуда... 🤖', 'AI тапсырмалар мен критерийлерді дайындап жатыр.', 'success');
       } else {
         navigate('assessment');
@@ -76,6 +78,7 @@ export async function executeIntent(
     case 'create_game':
       if (onDirectGenerate && (intent.params.topic || intent.params.subject)) {
         onDirectGenerate('game', intent.params);
+        navigate('games');
         addNotification('Ойын жасалуда... 🤖', 'AI қызықты ойын сценарийін дайындап жатыр.', 'success');
       } else {
         navigate('games');

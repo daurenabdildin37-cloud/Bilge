@@ -1,7 +1,7 @@
 
 import * as React from 'react';
 import { useState, useEffect } from 'react';
-import { X, Book, Gamepad2, CheckCircle2, Download } from 'lucide-react';
+import { X, Book, Gamepad2, CheckCircle2, Download, ArrowLeft } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { exportKmzhToDocx } from '../services/exportService';
 import { QuizGame } from '../components/Games/QuizGame';
@@ -21,6 +21,7 @@ interface LibraryViewProps {
   addNotification?: (title: string, message: string, type?: any) => void;
   showToast?: (message: string) => void;
   t: any;
+  onNavigate?: (tab: string, item?: any) => void;
 }
 
 const LibraryView = ({ 
@@ -29,7 +30,8 @@ const LibraryView = ({
   onOpenApiModal = () => {},
   addNotification = () => {},
   showToast = () => {},
-  t
+  t,
+  onNavigate
 }: LibraryViewProps) => {
   const [library, setLibrary] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,6 +121,15 @@ const LibraryView = ({
       animate={{ opacity: 1 }}
       className="fu"
     >
+      {onNavigate && (
+        <button 
+          onClick={() => onNavigate('dashboard')}
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Дашбордқа оралу
+        </button>
+      )}
       <div className="lib-search mb-6">
         <input 
           type="text" 

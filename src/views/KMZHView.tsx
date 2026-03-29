@@ -1,6 +1,6 @@
 
 import * as React from 'react';
-import { Book, CheckCircle2, Clock, Upload, Key, Download } from 'lucide-react';
+import { Book, CheckCircle2, Clock, Upload, Key, Download, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { extractTextFromPdf } from '../lib/pdf-utils';
 import { generateKmzh, GenerationProgress } from '../services/geminiService';
@@ -17,10 +17,11 @@ interface KMZHViewProps {
   onOpenApiModal: () => void;
   addNotification: (title: string, message: string, type: string) => void;
   initialResult?: any;
+  onNavigate?: (tab: string) => void;
 }
 
 const KMZHView = ({ 
-  isApiOk, onOpenApiModal, addNotification, initialResult 
+  isApiOk, onOpenApiModal, addNotification, initialResult, onNavigate 
 }: KMZHViewProps) => {
   const { 
     isKmzhGenerating: loading, 
@@ -219,6 +220,15 @@ const KMZHView = ({
       animate={{ opacity: 1, y: 0 }}
       className="fu"
     >
+      {onNavigate && (
+        <button 
+          onClick={() => onNavigate('dashboard')}
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors mb-4"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Дашбордқа оралу
+        </button>
+      )}
       <div className="card card-pad mb-8">
         <div className="flex justify-between items-center mb-6">
           <div className="card-title !mb-0">

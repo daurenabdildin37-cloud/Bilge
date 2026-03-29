@@ -109,13 +109,23 @@ export default function App() {
   
   useEffect(() => {
     const timer = setTimeout(() => {
-      console.warn("Global safety timeout reached: forcing loading screen dismissal");
-      setIsSafetyTimeoutReached(true);
-    }, 8000); // 8 seconds hard limit
+      if (authLoading && !user) {
+        console.warn("Global safety timeout reached: forcing loading screen dismissal. Auth state might be stuck.");
+        setIsSafetyTimeoutReached(true);
+      }
+    }, 15000); // 15 seconds hard limit
     return () => clearTimeout(timer);
-  }, []);
+  }, [authLoading, user]);
 
   const effectiveLoading = authLoading && !isSafetyTimeoutReached;
+
+  console.log("App: Render State", { 
+    uid: user?.uid, 
+    authLoading, 
+    effectiveLoading, 
+    isSafetyTimeoutReached,
+    activeTab 
+  });
 
   const handleNavigate = useCallback((tab: string, item?: any) => {
     setActiveTab(tab);

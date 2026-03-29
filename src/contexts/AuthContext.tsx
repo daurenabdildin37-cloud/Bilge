@@ -52,6 +52,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     console.log("AuthContext: Setting up onAuthStateChanged listener");
     let unsubscribeFirestore: (() => void) | null = null;
+    let isInitialCheck = true;
+    const isRedirecting = localStorage.getItem('isRedirecting') === 'true';
+
+    // Handle redirect result first to ensure we catch any redirect-based login
+    const handleRedirect = async () => {
+      try {
+        if (isRedirecting) {
+          console.log("AuthContext: Checking for redirect result (isRedirecting=true)...");
+          const result = await getRedirectResult(auth);
+          if (result?.user) {
+            console.log("AuthContext: Found user from redirect:", result.user.uid);
+          } else {
+            console.log("AuthContext: No redirect result user found after redirect");
+          }
+          localStorage.removeItem('isRedirecting');
+        } else {
+          console.log("AuthContext: Checking for redirect result (isRedirecting=false)...");
+          await getRedirectResult(auth);
+        }
+      } catch (error: any) {
+        console.error("AuthContext: Redirect result error:", error);
+        localStorage.removeItem('isRedirecting');
+      }
+    };
+
+    handleRedirect();
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log("AuthContext: onAuthStateChanged fired", firebaseUser ? `UID: ${firebaseUser.uid}` : "NULL");
@@ -66,14 +92,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!firebaseUser) {
         console.log("AuthContext: No Firebase user, clearing state");
         setUser(null);
-        localStorage.removeItem('GEMINI_API_KEY');
-        localStorage.removeItem('CLAUDE_API_KEY');
-        setIsApiOk(false);
-        setIsClaudeApiOk(false);
+        
+        // If we are still in redirect flow, don't set loading to false yet
+        if (isRedirecting && isInitialCheck) {
+          console.log("AuthContext: Still in redirect flow, waiting...");
+          return;
+        }
+
+        // Only clear localStorage if we're sure it's not a temporary null during redirect
+        if (!isInitialCheck) {
+          localStorage.removeItem('GEMINI_API_KEY');
+          localStorage.removeItem('CLAUDE_API_KEY');
+          setIsApiOk(false);
+          setIsClaudeApiOk(false);
+        }
         setLoading(false);
+        isInitialCheck = false;
         return;
       }
 
+      isInitialCheck = false;
       // 1. Set initial user immediately to unblock UI
       const initialUser: User = {
         uid: firebaseUser.uid,
@@ -95,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const userRef = doc(db, 'users', firebaseUser.uid);
       
       unsubscribeFirestore = onSnapshot(userRef, async (userDoc) => {
-        console.log("AuthContext: Firestore user document changed");
+        console.log("AuthContext: Firestore user document changed for", firebaseUser.uid);
         
         if (!userDoc.exists()) {
           console.log("AuthContext: No Firestore document for user, creating one...");
@@ -108,7 +146,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               createdAt: serverTimestamp(),
               updatedAt: serverTimestamp(),
               role: 'teacher'
-            });
+            }, { merge: true });
           } catch (err) {
             console.error("AuthContext: Error creating user doc:", err);
           }
@@ -116,6 +154,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         const existingData = userDoc.data() as any;
+        console.log("AuthContext: User data from Firestore:", { role: existingData.role });
+        
         const newUser: User = { 
           uid: firebaseUser.uid,
           email: firebaseUser.email,
@@ -147,25 +187,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (existingData.gemini_api_key) {
           localStorage.setItem('GEMINI_API_KEY', existingData.gemini_api_key);
           setIsApiOk(true);
-        } else {
-          localStorage.removeItem('GEMINI_API_KEY');
-          setIsApiOk(false);
         }
 
         if (existingData.claude_api_key) {
           localStorage.setItem('CLAUDE_API_KEY', existingData.claude_api_key);
           setIsClaudeApiOk(true);
-        } else {
-          localStorage.removeItem('CLAUDE_API_KEY');
-          setIsClaudeApiOk(false);
         }
       }, (error) => {
         console.error("AuthContext: Firestore listener error:", error);
       });
-    });
-
-    getRedirectResult(auth).catch((error) => {
-      console.error("AuthContext: Redirect result error:", error);
     });
 
     return () => {
@@ -178,7 +208,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = useCallback(async () => {
     if (!auth || !googleProvider) return;
     try {
+      console.log("AuthContext: Attempting signInWithPopup...");
       await signInWithPopup(auth, googleProvider);
+      console.log("AuthContext: signInWithPopup successful");
     } catch (err: any) {
       console.error("Login popup error:", err);
       const redirectErrors = [
@@ -190,9 +222,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (redirectErrors.includes(err.code) || err.message?.includes('popup')) {
         try {
+          console.log("AuthContext: Falling back to signInWithRedirect...");
+          localStorage.setItem('isRedirecting', 'true');
           await signInWithRedirect(auth, googleProvider);
         } catch (redirErr) {
           console.error("Redirect login error:", redirErr);
+          localStorage.removeItem('isRedirecting');
           throw redirErr;
         }
       } else {

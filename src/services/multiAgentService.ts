@@ -1,6 +1,30 @@
 import { GoogleGenAI } from "@google/genai";
 import { KMZHParams } from "../types";
 
+export function cleanJsonContent(content: string): string {
+  // Remove markdown code blocks
+  let cleaned = content.replace(/```json\n?|```/g, '').trim();
+  
+  // Check if it starts with { or [
+  if (!cleaned.startsWith('{') && !cleaned.startsWith('[')) {
+    const firstBrace = cleaned.indexOf('{');
+    const firstBracket = cleaned.indexOf('[');
+    
+    let startIndex = -1;
+    if (firstBrace !== -1 && firstBracket !== -1) {
+      startIndex = Math.min(firstBrace, firstBracket);
+    } else {
+      startIndex = firstBrace !== -1 ? firstBrace : firstBracket;
+    }
+    
+    if (startIndex !== -1) {
+      cleaned = cleaned.slice(startIndex);
+    }
+  }
+  
+  return cleaned;
+}
+
 export type AgentRole = 'generator' | 'critic' | 'refiner';
 
 export interface AgentResult {
@@ -124,7 +148,7 @@ export async function runKmzhPipeline(
     return { finalContent: '', agentResults, success: false };
   }
 
-  currentContent = generatorResult.content;
+  currentContent = cleanJsonContent(generatorResult.content);
 
   // Stage 2: Critic
   const v2 = import.meta.env.VITE_GEMINI_KEY_2;
@@ -155,11 +179,12 @@ export async function runKmzhPipeline(
       agentResults.push(refinerResult);
 
       if (refinerResult.success) {
-        currentContent = refinerResult.content;
+        currentContent = cleanJsonContent(refinerResult.content);
       }
     }
   }
 
+  currentContent = cleanJsonContent(currentContent);
   onProgress({ stage: 'done', message: 'Дайын!' });
   return {
     finalContent: currentContent,

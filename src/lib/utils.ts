@@ -29,13 +29,30 @@ export const getBaseUrl = () => {
   return fullUrl;
 };
 
-export const safeJsonParse = (str: string, fallback: any = null) => {
+export function safeJsonParse<T>(text: string, fallback: T): T {
   try {
-    // Remove markdown code blocks if present
-    const cleanStr = str.replace(/```json\n?|```/g, '').trim();
-    return JSON.parse(cleanStr);
+    return JSON.parse(text);
   } catch (e) {
-    console.error("JSON Parse Error:", e, "String:", str);
-    return fallback;
+    try {
+      // Clean like cleanJsonContent
+      let cleaned = text.replace(/```json\n?|```/g, '').trim();
+      if (!cleaned.startsWith('{') && !cleaned.startsWith('[')) {
+        const firstBrace = cleaned.indexOf('{');
+        const firstBracket = cleaned.indexOf('[');
+        let startIndex = -1;
+        if (firstBrace !== -1 && firstBracket !== -1) {
+          startIndex = Math.min(firstBrace, firstBracket);
+        } else {
+          startIndex = firstBrace !== -1 ? firstBrace : firstBracket;
+        }
+        if (startIndex !== -1) {
+          cleaned = cleaned.slice(startIndex);
+        }
+      }
+      return JSON.parse(cleaned);
+    } catch (err) {
+      console.error("JSON Parse Error:", err, "Original Text:", text);
+      return fallback;
+    }
   }
-};
+}

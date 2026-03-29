@@ -6,13 +6,16 @@ import { ArrowRight, Key, Trash2 } from 'lucide-react';
 import { motion } from 'motion/react';
 import { chatWithTeacher } from '../services/geminiService';
 import { useChat } from '../hooks/useChat';
+import { detectIntent, executeIntent } from '../services/agenticService';
 
 interface ChatViewProps {
   isApiOk: boolean;
   onOpenApiModal: () => void;
+  addNotification: (title: string, message: string, type: string) => void;
+  onNavigate: (tab: string) => void;
 }
 
-const ChatView = ({ isApiOk, onOpenApiModal }: ChatViewProps) => {
+const ChatView = ({ isApiOk, onOpenApiModal, addNotification, onNavigate }: ChatViewProps) => {
   const { messages, sendMessage, clearHistory, loading } = useChat();
   const [input, setInput] = useState('');
   const [isThinking, setIsThinking] = useState(false);
@@ -35,6 +38,16 @@ const ChatView = ({ isApiOk, onOpenApiModal }: ChatViewProps) => {
     try {
       // Save user message to Firestore
       await sendMessage(userText, 'user');
+
+      // Detect intent in background
+      detectIntent(userText).then(intent => {
+        if (intent.type !== 'general_chat' && intent.confidence > 0.7) {
+          executeIntent(intent, addNotification, onNavigate);
+          if (intent.message) {
+            sendMessage(intent.message, 'ai');
+          }
+        }
+      }).catch(err => console.error("Intent detection failed:", err));
 
       let kbContext = "";
       if (useKB) {

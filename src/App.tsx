@@ -488,7 +488,14 @@ export default function App() {
                     addNotification={addNotification} 
                   />
                 )}
-                {activeTab === 'chat' && <ChatView isApiOk={isApiOk} onOpenApiModal={openApiModal} />}
+                {activeTab === 'chat' && (
+                  <ChatView 
+                    isApiOk={isApiOk} 
+                    onOpenApiModal={openApiModal} 
+                    addNotification={addNotification}
+                    onNavigate={handleNavigate}
+                  />
+                )}
                 {activeTab === 'calendar' && <CalendarView />}
                 {activeTab === 'library' && <LibraryView searchQuery={searchQuery} isApiOk={isApiOk} onOpenApiModal={openApiModal} addNotification={addNotification} showToast={showToast} t={t} />}
                 {activeTab === 'games' && (

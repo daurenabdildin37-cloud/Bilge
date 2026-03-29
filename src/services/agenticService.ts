@@ -51,19 +51,19 @@ export async function detectIntent(userMessage: string): Promise<AgenticIntent> 
 export async function executeIntent(
   intent: AgenticIntent, 
   addNotification: (title: string, message: string, type: string) => void, 
-  navigate: (path: string) => void
+  navigate: (tab: string) => void
 ): Promise<void> {
   switch (intent.type) {
     case 'create_kmzh':
-      navigate('/kmzh');
+      navigate('kmzh');
       addNotification('ҚМЖ бетіне өттіңіз', 'Параметрлерді толтырыңыз немесе AI-дан сұраңыз.', 'info');
       break;
     case 'create_assessment':
-      navigate('/assessment');
+      navigate('assessment');
       addNotification('Бағалау бетіне өттіңіз', 'Тапсырмалар жасау үшін параметрлерді енгізіңіз.', 'info');
       break;
     case 'create_game':
-      navigate('/games');
+      navigate('games');
       addNotification('Ойындар бетіне өттіңіз', 'Ойын түрін таңдап, тақырыпты жазыңыз.', 'info');
       break;
     case 'general_chat':

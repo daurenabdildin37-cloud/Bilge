@@ -15,7 +15,9 @@ import {
   Database,
   Image as ImageIcon,
   CreditCard,
-  Trophy
+  Trophy,
+  Brain,
+  Sparkles
 } from 'lucide-react';
 
 import { translations, Language } from '../../lib/translations';
@@ -54,6 +56,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'chat', label: t.chat, icon: <MessageSquare size={18} /> },
     { id: 'calendar', label: t.calendar, icon: <Calendar size={18} /> },
     { id: 'library', label: t.library, icon: <BookOpen size={18} /> },
+    { id: 'extensions', label: '🧠 Кеңейту', icon: <Brain size={18} /> },
   ];
 
   if (isAdmin) {

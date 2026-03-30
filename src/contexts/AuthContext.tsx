@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-import { auth, googleProvider, db } from '../lib/firebase';
+import { auth, googleProvider, db, isFirebaseConfigured } from '../lib/firebase';
 import { 
   onAuthStateChanged, 
   signInWithPopup, 
@@ -57,6 +57,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Handle redirect result first to ensure we catch any redirect-based login
     const handleRedirect = async () => {
+      if (!isFirebaseConfigured) return;
       try {
         if (isRedirecting) {
           console.log("AuthContext: Checking for redirect result (isRedirecting=true)...");
@@ -78,6 +79,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     handleRedirect();
+
+    if (!isFirebaseConfigured) {
+      setLoading(false);
+      return;
+    }
 
     const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
       console.log("AuthContext: onAuthStateChanged fired", firebaseUser ? `UID: ${firebaseUser.uid}` : "NULL");
@@ -206,7 +212,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = useCallback(async () => {
-    if (!auth || !googleProvider) return;
+    if (!isFirebaseConfigured || !auth || !googleProvider) return;
     try {
       console.log("AuthContext: Attempting signInWithPopup...");
       await signInWithPopup(auth, googleProvider);
@@ -237,6 +243,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = useCallback(async () => {
+    if (!isFirebaseConfigured) return;
     try {
       await signOut(auth);
     } catch (err) {

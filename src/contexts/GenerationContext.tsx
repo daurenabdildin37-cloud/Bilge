@@ -4,6 +4,8 @@ import { generateGameIterative, generateKmzh, generateAssessment, generateGame }
 import { generateGameWithClaude } from '../services/claudeService';
 import { runKmzhPipeline, PipelineProgress } from '../services/multiAgentService';
 import { safeJsonParse } from '../lib/utils';
+import { updateMemoryAfterGeneration } from '../services/memoryService';
+import { trackAction } from '../services/analyticsService';
 
 interface Message {
   role: 'user' | 'model';
@@ -268,8 +270,11 @@ export const GenerationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
           if (data) {
             setKmzhResult(data);
             setKmzhLoaderStep(4);
+            updateMemoryAfterGeneration('kmzh', params.topic, true);
+            trackAction('generate', 'kmzh', { topic: params.topic });
             addNotification('ҚМЖ Дайын! ✅', `${params.topic} тақырыбы бойынша сабақ жоспары сәтті жасалды.`, 'success');
           } else {
+            updateMemoryAfterGeneration('kmzh', params.topic, false);
             addNotification('Қате ❌', 'Генерацияланған мазмұнды оқу мүмкін болмады (JSON parse error).', 'error');
             console.error("JSON Parse Error in Multi-Agent Pipeline:", result.finalContent);
           }
@@ -283,13 +288,17 @@ export const GenerationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             if (data) {
               setKmzhResult(data);
               setKmzhLoaderStep(4);
+              updateMemoryAfterGeneration('kmzh', params.topic, true);
+              trackAction('generate', 'kmzh', { topic: params.topic });
               const agentName = failedAgent?.role === 'critic' ? 'Агент 2' : 'Агент 3';
               addNotification('Жартылай дайын ⚠️', `${agentName} сәтсіз, бірақ алдыңғы нұсқа сақталды.`, 'warning');
             } else {
+              updateMemoryAfterGeneration('kmzh', params.topic, false);
               addNotification('Генерация қатесі ❌', 'Агент 1 нәтижесін оқу мүмкін болмады.', 'error');
             }
           } else {
             // Agent 1 failed or timeout
+            updateMemoryAfterGeneration('kmzh', params.topic, false);
             let errorMsg = 'Multi-Agent Pipeline сәтсіз аяқталды.';
             if (failedAgent && failedAgent.role === 'generator') {
               errorMsg = 'Агент 1 қатесі: API кілтін немесе лимитті тексеріңіз.';
@@ -307,10 +316,13 @@ export const GenerationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
         setKmzhLoaderStep(3);
         setKmzhResult(data);
         setKmzhLoaderStep(4);
+        updateMemoryAfterGeneration('kmzh', params.topic, true);
+        trackAction('generate', 'kmzh', { topic: params.topic });
         addNotification('ҚМЖ Дайын! ✅', `${params.topic} тақырыбы бойынша сабақ жоспары сәтті жасалды.`, 'success');
       }
     } catch (err: any) {
       console.error("KMZH Generation Error:", err);
+      updateMemoryAfterGeneration('kmzh', params.topic, false);
       addNotification('Генерация қатесі ❌', err.message || 'Қате орын алды.', 'error');
     } finally {
       setIsKmzhGenerating(false);
@@ -348,9 +360,12 @@ export const GenerationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       });
       
       setAssessmentResult(data);
+      updateMemoryAfterGeneration('assessment', params.topic, true);
+      trackAction('generate', 'assessment', { topic: params.topic, type: params.type });
       addNotification(`${params.type} Дайын! 📝`, `${params.topic} бойынша тапсырмалар сәтті жасалды.`, 'success');
     } catch (err: any) {
       console.error("Assessment Generation Error:", err);
+      updateMemoryAfterGeneration('assessment', params.topic, false);
       addNotification('Генерация қатесі ❌', err.message || 'Қате орын алды.', 'error');
     } finally {
       setIsAssessmentGenerating(false);
@@ -388,9 +403,12 @@ export const GenerationProvider: React.FC<{ children: React.ReactNode }> = ({ ch
       if (data && data.type) {
         setActiveGame(data.type.toLowerCase());
       }
+      updateMemoryAfterGeneration('game', params.topic, true);
+      trackAction('generate', 'game', { topic: params.topic, type: params.type });
       addNotification('Ойын дайын! 🎮', `${params.topic} тақырыбы бойынша ойын сәтті жасалды.`, 'success');
     } catch (err: any) {
       console.error("Game Generation Error:", err);
+      updateMemoryAfterGeneration('game', params.topic, false);
       addNotification('Генерация қатесі ❌', err.message || 'Қате орын алды.', 'error');
     } finally {
       setIsGameGenerating(false);

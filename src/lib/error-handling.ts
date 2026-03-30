@@ -1,4 +1,4 @@
-import { auth, db } from './firebase';
+import { auth, db, isFirebaseConfigured } from './firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export enum OperationType {
@@ -35,6 +35,8 @@ export const reportErrorToAI = async (error: any, type: string, context?: any) =
 
     console.error(`[AI Error Report - ${type}]:`, errorData);
     
+    if (!isFirebaseConfigured) return;
+
     // Save to Firestore so the AI can query it later
     await addDoc(collection(db, 'system_errors'), errorData);
   } catch (e) {

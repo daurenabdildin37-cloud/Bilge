@@ -21,6 +21,8 @@ import { db, auth } from '../lib/firebase';
 import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../lib/error-handling';
 import { User } from '../types';
+import { getPersonalizedGreeting } from '../services/memoryService';
+import { getTopFeatures, UsagePattern } from '../services/analyticsService';
 
 interface DashboardViewProps {
   user: User | null;
@@ -34,6 +36,8 @@ const DashboardView = ({ user, onNavigate, searchQuery, t, onLogout }: Dashboard
   const [stats, setStats] = useState({ kmzh: 0, games: 0 });
   const [recent, setRecent] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [greeting, setGreeting] = useState('');
+  const [topFeatures, setTopFeatures] = useState<UsagePattern[]>([]);
   console.log('DashboardView: Component rendering start', { uid: user?.uid, loading });
   const [showForceRender, setShowForceRender] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,6 +135,16 @@ const DashboardView = ({ user, onNavigate, searchQuery, t, onLogout }: Dashboard
     }
   };
 
+  useEffect(() => {
+    const loadPersonalization = async () => {
+      const g = await getPersonalizedGreeting();
+      setGreeting(g);
+      const f = getTopFeatures();
+      setTopFeatures(f);
+    };
+    loadPersonalization();
+  }, []);
+
   const filteredRecent = recent.filter(item => {
     const query = searchQuery.toLowerCase();
     const title = (item.title || '').toLowerCase();
@@ -201,6 +215,49 @@ const DashboardView = ({ user, onNavigate, searchQuery, t, onLogout }: Dashboard
           </button>
         </div>
       </div>
+
+      {/* Personalized Suggestions Block */}
+      {topFeatures.length > 0 && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mb-10 p-6 bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl text-white shadow-xl shadow-indigo-200 dark:shadow-none relative overflow-hidden"
+        >
+          <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl"></div>
+          <div className="relative z-10">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center">
+                <Target size={18} className="text-yellow-300" />
+              </div>
+              <h3 className="font-bold text-lg">🎯 Сізге арналған ұсыныстар</h3>
+            </div>
+            
+            <p className="text-indigo-100 mb-6 font-medium leading-relaxed">
+              {greeting}
+            </p>
+
+            <div className="space-y-3">
+              <p className="text-xs font-bold text-indigo-200 uppercase tracking-wider">Жиі пайдаланылады:</p>
+              <div className="flex flex-wrap gap-2">
+                {topFeatures.slice(0, 3).map((f, i) => (
+                  <button
+                    key={i}
+                    onClick={() => onNavigate(f.feature)}
+                    className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-bold transition-all flex items-center gap-2 group"
+                  >
+                    <span className="capitalize">
+                      {f.feature === 'kmzh' ? 'ҚМЖ' : 
+                       f.feature === 'assessment' ? 'БЖБ/ТЖБ' : 
+                       f.feature === 'game' ? 'Ойын' : f.feature}
+                    </span>
+                    <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       {/* Mobile Account Section */}
       <div className="lg:hidden w-full bg-white rounded-2xl p-5 border border-slate-200 shadow-sm mb-8">

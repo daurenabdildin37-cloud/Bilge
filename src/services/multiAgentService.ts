@@ -1,5 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { KMZHParams } from "../types";
+import { improvePrompt } from "./memoryService";
 
 export function cleanJsonContent(content: string): string {
   // Remove markdown code blocks
@@ -162,7 +163,14 @@ export async function runKmzhPipeline(
       Дереккөз мәтін: ${params.sourceText}
     `;
 
-    const generatorResult = await callAgent('generator', generatorSystemPrompt, generatorUserPrompt);
+    let enhancedUserPrompt = generatorUserPrompt;
+    try {
+      enhancedUserPrompt = await improvePrompt(generatorUserPrompt, 'kmzh');
+    } catch (e) {
+      console.error('Error enhancing prompt:', e);
+    }
+
+    const generatorResult = await callAgent('generator', generatorSystemPrompt, enhancedUserPrompt);
     agentResults.push(generatorResult);
 
     if (!generatorResult.success) {

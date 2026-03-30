@@ -19,6 +19,7 @@ import { translations, Language } from './lib/translations';
 import DashboardView from './views/DashboardView';
 import { useGeneration } from './contexts/GenerationContext';
 import { ViewLoader } from './components/Common/ViewLoader';
+import { trackAction } from './services/analyticsService';
 
 const KMZHView = lazy(() => import('./views/KMZHView'));
 const GamesView = lazy(() => import('./views/GamesView'));
@@ -32,6 +33,7 @@ const MapView = lazy(() => import('./views/MapView'));
 const CalendarView = lazy(() => import('./views/CalendarView'));
 const AdminKBView = lazy(() => import('./views/AdminKBView'));
 const SettingsView = lazy(() => import('./views/SettingsView'));
+const ExtensionsView = lazy(() => import('./views/ExtensionsView'));
 const FeedbackView = lazy(() => import('./views/FeedbackView'));
 const GradingSimulatorView = lazy(() => import('./views/GradingSimulatorView'));
 const PublicGradingView = lazy(() => import('./views/PublicGradingView'));
@@ -41,7 +43,7 @@ export default function App() {
     return localStorage.getItem('activeTab') || 'dashboard';
   });
 
-  const validTabs = ['dashboard', 'kmzh', 'assessment', 'map', 'coding', 'chat', 'calendar', 'library', 'games', 'settings', 'admin_kb', 'feedback', 'grading_simulator'];
+  const validTabs = ['dashboard', 'kmzh', 'assessment', 'map', 'coding', 'chat', 'calendar', 'library', 'games', 'settings', 'admin_kb', 'feedback', 'grading_simulator', 'extensions'];
   
   useEffect(() => {
     if (!validTabs.includes(activeTab)) {
@@ -50,7 +52,24 @@ export default function App() {
     }
     localStorage.setItem('activeTab', activeTab);
     console.log('App: activeTab changed to', activeTab);
+    trackAction('navigate', activeTab);
   }, [activeTab]);
+
+  useEffect(() => {
+    const lastAnalysis = localStorage.getItem('bilge_last_analysis');
+    const now = Date.now();
+    const oneDay = 24 * 60 * 60 * 1000;
+
+    if (!lastAnalysis || (now - parseInt(lastAnalysis)) > oneDay) {
+      import('./services/analyticsService').then(m => {
+        m.detectBehaviorPatterns()
+          .then(() => {
+            localStorage.setItem('bilge_last_analysis', Date.now().toString());
+          })
+          .catch(err => console.error('Error in background analysis:', err));
+      });
+    }
+  }, []);
 
   const [showDebug, setShowDebug] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -418,6 +437,7 @@ export default function App() {
     settings: t.settings,
     feedback: 'Кері байланыс',
     grading_simulator: t.grading_simulator,
+    extensions: 'AI Кеңейту',
     image_gen: 'Сурет генераторы',
     admin_kb: 'Білім базасы (Админ)'
   }[activeTab] || '';
@@ -542,10 +562,14 @@ export default function App() {
                     theme={theme}
                     toggleTheme={toggleTheme}
                     t={t}
+                    addNotification={addNotification}
                   />
                 )}
                 {activeTab === 'feedback' && (
                   <FeedbackView showToast={showToast} />
+                )}
+                {activeTab === 'extensions' && (
+                  <ExtensionsView addNotification={addNotification} />
                 )}
               </Suspense>
             </ErrorBoundary>
